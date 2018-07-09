@@ -31,12 +31,11 @@ public class MainActivity extends AppCompatActivity {
             LinearLayout linearLayout = new LinearLayout(this, null, ViewPager.LayoutParams.MATCH_PARENT, ViewPager.LayoutParams.MATCH_PARENT);
             TextView textView = new TextView(this);
             textView.setText("Item" + i);
-            textView.setTextSize(60);
+            textView.setTextSize(12);
             textView.setGravity(Gravity.CENTER);
             linearLayout.addView(textView);
             views.add(textView);
         }
-        tk_layout.setViewpager(vp_viewpager);
         vp_viewpager.setAdapter(new PagerAdapter() {
             @Override
             public int getCount() {
@@ -62,7 +61,13 @@ public class MainActivity extends AppCompatActivity {
             public void destroyItem(ViewGroup container, int position, Object object) {
                 container.removeView((View) object);
             }
+
+            @Override
+            public CharSequence getPageTitle(int position) {
+                return "item" + position;
+            }
         });
+        tk_layout.setViewpager(vp_viewpager);
     }
 
 }

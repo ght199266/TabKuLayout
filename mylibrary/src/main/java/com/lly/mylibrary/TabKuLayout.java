@@ -1,16 +1,12 @@
 package com.lly.mylibrary;
 
 import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.support.annotation.Nullable;
+import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.AppCompatTextView;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.View;
 import android.widget.LinearLayout;
 
 /**
@@ -25,16 +21,24 @@ import android.widget.LinearLayout;
 
 public class TabKuLayout extends LinearLayout {
 
+    private Context mContext;
 
-    private Paint mIndicatorPaint;
 
-    private int mIndicatorHeight;
+    private int mIndicatorHeight = 20;
 
     private ViewPager mViewpager;
-
     private LinearLayout mTabContainer;
-
     private TabIndicatorView mIndicatorView;
+
+    //Tab数量
+    private int mTabChildCount;
+    private PagerAdapter mPagerAdapter;
+
+    private int lastValue;
+    private int scrollOrientation = -1;
+
+    //指示器距离底部距离
+//    private int mIndicatorBottom = 10;
 
     public TabKuLayout(Context context) {
         this(context, null);
@@ -42,107 +46,111 @@ public class TabKuLayout extends LinearLayout {
 
     public TabKuLayout(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
+        this.mContext = context;
     }
 
     public void setViewpager(ViewPager mViewpager) {
         this.mViewpager = mViewpager;
+        addOnPageChangeListener();
+        getPagerAdapter();
+    }
 
+    /**
+     * 监听viewpager滑动
+     */
+    private void addOnPageChangeListener() {
         mViewpager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                Log.v("test", "positionOffset:=" + positionOffset);
-                Log.v("test", "positionOffsetPixels:=" + positionOffsetPixels);
+                if (positionOffset != 0) {
+                    if (lastValue >= positionOffsetPixels) {
+                        //右滑
+                        scrollOrientation = 0;
+                    } else if (lastValue < positionOffsetPixels) {
+                        //左滑
+                        scrollOrientation = 1;
+                    }
+                }
+                lastValue = positionOffsetPixels;
+                final int roundedPosition = Math.round(position + positionOffset);
+                mIndicatorView.updateIndicator(position, positionOffset, positionOffsetPixels, scrollOrientation);
             }
+
             @Override
             public void onPageSelected(int position) {
-                if (mIndicatorView != null) {
-                    mIndicatorView.setTranslationX(position * 112 + 20);
-                }
+//                Log.v("test", "onPageSelected:=" + position);
             }
 
             @Override
             public void onPageScrollStateChanged(int state) {
-
+                Log.v("test", "onPageScrollStateChanged:=" + mViewpager.getCurrentItem());
             }
         });
+    }
+
+
+    private void getPagerAdapter() {
+        mPagerAdapter = mViewpager.getAdapter();
+        if (mPagerAdapter != null) {
+            mTabChildCount = mPagerAdapter.getCount();
+            addTabTextView();
+            addIndicatorView();
+        }
+    }
+
+    private void addTabTextView() {
+        for (int i = 0; i < mTabChildCount; i++) {
+            TabKuView tabKuView = new TabKuView(mContext);
+            tabKuView.setText(mPagerAdapter.getPageTitle(i));
+            LinearLayout.LayoutParams tabKuViewParams = new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT, 1.0f);
+            mTabContainer.addView(tabKuView, tabKuViewParams);
+        }
+        super.addView(mTabContainer, 0, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+    }
+
+    /**
+     *
+     */
+    private void addIndicatorView() {
+        mIndicatorView = new TabIndicatorView(mContext);
+        super.addView(mIndicatorView, 1, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, mIndicatorHeight));
     }
 
     public TabKuLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         setOrientation(VERTICAL);
         mTabContainer = new LinearLayout(context);
-        for (int i = 0; i < 5; i++) {
-            mTabContainer.addView(new TabKuView(context));
-        }
         mTabContainer.setGravity(Gravity.CENTER_VERTICAL);
-        mIndicatorView = new TabIndicatorView(context);
-        super.addView(mTabContainer, 0, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, 110));
-        super.addView(mIndicatorView, 1, new LinearLayout.LayoutParams(60, 10));
-
-        mIndicatorView.setBackgroundColor(Color.RED);
-        mIndicatorPaint = new Paint();
-        mIndicatorPaint.setStrokeCap(Paint.Cap.ROUND);
-        mIndicatorPaint.setColor(Color.RED);
-        mIndicatorPaint.setStrokeWidth(10);
     }
 
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        mTabContainer.post(new Runnable() {
-            @Override
-            public void run() {
-                for (int i = 0; i < mTabContainer.getChildCount(); i++) {
-                    View v = mTabContainer.getChildAt(i);
-                    Log.v("test", "getPaddingLeft:=" + v.getPaddingLeft());
-                    Log.v("test", "left:=" + v.getLeft());
-                }
-            }
-        });
+        LinearLayout.LayoutParams params = (LayoutParams) mTabContainer.getLayoutParams();
+        params.height = h - mIndicatorHeight;
+        params.width = LayoutParams.WRAP_CONTENT;
+        mTabContainer.setLayoutParams(params);
     }
 
     @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-//        canvas.drawLine(0, getHeight() - 50, 60, getHeight() - 50, mIndicatorPaint);
-    }
-
-    private class TabIndicatorView extends View {
-
-        public TabIndicatorView(Context context) {
-            super(context);
-        }
-
-        public TabIndicatorView(Context context, @Nullable AttributeSet attrs) {
-            super(context, attrs);
-        }
-
-        public TabIndicatorView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-            super(context, attrs, defStyleAttr);
-        }
-
-        @Override
-        protected void onDraw(Canvas canvas) {
-            super.onDraw(canvas);
-        }
-
-        @Override
-        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-            int height = getDefaultSize(MeasureSpec.getSize(heightMeasureSpec), heightMeasureSpec);
-            Log.v("test", "height:=" + height);
-            setMeasuredDimension(widthMeasureSpec, height);
+    public void onWindowFocusChanged(boolean hasWindowFocus) {
+        super.onWindowFocusChanged(hasWindowFocus);
+        Log.v("test", "onWindowFocusChanged");
+        if (hasWindowFocus) {
+            LinearLayout.LayoutParams params = (LayoutParams) mTabContainer.getLayoutParams();
+            params.height = getHeight() - mIndicatorHeight;
+            params.width = LayoutParams.MATCH_PARENT;
+            mTabContainer.setLayoutParams(params);
+            mIndicatorView.setItemWidth(getWidth() / mTabContainer.getChildCount());
+            mIndicatorView.updateIndicator(0, 0, 0, -1);
         }
     }
+
 
     private class TabKuView extends AppCompatTextView {
-
-
         public TabKuView(Context context) {
             super(context);
-            setText("item1");
-            setPadding(20, 0, 20, 0);
             setGravity(Gravity.CENTER);
         }
 
