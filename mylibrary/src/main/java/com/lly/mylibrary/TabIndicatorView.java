@@ -3,6 +3,7 @@ package com.lly.mylibrary;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
@@ -16,7 +17,7 @@ public class TabIndicatorView extends View {
 
     private int startX;
     private int endY;
-
+    LinearGradient linearGradient;
 
     private int mOffsetValue;
 
@@ -28,8 +29,12 @@ public class TabIndicatorView extends View {
     public TabIndicatorView(Context context) {
         super(context);
         mIndicatorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mIndicatorPaint.setColor(Color.RED);
-        mIndicatorPaint.setStrokeWidth(15);
+//        mIndicatorPaint.setColor(Color.RED);
+        mIndicatorPaint.setStrokeCap(Paint.Cap.SQUARE);
+//        mIndicatorPaint.setStrokeWidth(20);
+
+        linearGradient = new LinearGradient(startX, 0,
+                endY, 0, new int[]{Color.YELLOW, Color.BLUE, Color.YELLOW}, null, LinearGradient.TileMode.CLAMP);
     }
 
     public TabIndicatorView(Context context, @Nullable AttributeSet attrs) {
@@ -43,7 +48,10 @@ public class TabIndicatorView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        canvas.drawLine(startX, 0, endY, 0, mIndicatorPaint);
+        linearGradient = new LinearGradient(startX, 0,
+                endY, 0, new int[]{Color.YELLOW, Color.RED}, null, LinearGradient.TileMode.CLAMP);
+        mIndicatorPaint.setShader(linearGradient);
+        canvas.drawRoundRect(startX, 0, endY, getHeight(), 10, 10, mIndicatorPaint);
     }
 
     @Override
@@ -53,32 +61,14 @@ public class TabIndicatorView extends View {
         setMeasuredDimension(widthMeasureSpec, height);
     }
 
-    public void updateIndicator(int position, float positionOffset, int positionOffsetPixels, int scrollOrientation) {
+    public void updateIndicator(int position, float positionOffset) {
         final int roundedPosition = Math.round(position + positionOffset);
-        if (roundedPosition != -1) {
-            if (roundedPosition == 0) {
-                Log.v("test", "右滑动");
-            } else {
-                Log.v("test", "zuo滑动");
-            }
+        startX = (position * itemWidth);
+        endY = (int) (startX + itemWidth + (itemWidth * 2 * positionOffset));
+        if (endY - startX >= (itemWidth * 2)) {
+            startX += (itemWidth * 2) * (positionOffset - 0.5f);
+            endY = (roundedPosition + 1) * itemWidth;
         }
-//        if (positionOffsetPixels < mOffsetValue) {
-//        } else if (positionOffsetPixels > mOffsetValue) {
-//            startX = position * itemWidth;
-//            Log.v("test", "eny:=" + endY);
-//            Log.v("test", "2222:=" + (roundedPosition * itemWidth) + itemWidth / 2);
-//            if (endY < (roundedPosition * itemWidth) + itemWidth / 2) {
-//                Log.v("test", "右边先动");
-//                endY = (int) (startX + itemWidth + (itemWidth * positionOffset));
-//            } else {
-//                Log.v("test", "左边先动");
-//                startX = (int) ((position * itemWidth) * positionOffset);
-//            }
-//        } else {
-//            startX = position * itemWidth;
-//            endY = (int) (startX + itemWidth + (itemWidth * positionOffset));
-//        }
-//        mOffsetValue = positionOffsetPixels;
-//        invalidate();
+        invalidate();
     }
 }

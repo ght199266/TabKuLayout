@@ -1,12 +1,14 @@
 package com.lly.mylibrary;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.AppCompatTextView;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.LinearLayout;
 
 /**
@@ -24,7 +26,7 @@ public class TabKuLayout extends LinearLayout {
     private Context mContext;
 
 
-    private int mIndicatorHeight = 20;
+    private int mIndicatorHeight = 10;
 
     private ViewPager mViewpager;
     private LinearLayout mTabContainer;
@@ -34,9 +36,8 @@ public class TabKuLayout extends LinearLayout {
     private int mTabChildCount;
     private PagerAdapter mPagerAdapter;
 
-    private int lastValue;
-    private int scrollOrientation = -1;
 
+    private ColorStateList mColorStateList;
     //指示器距离底部距离
 //    private int mIndicatorBottom = 10;
 
@@ -62,28 +63,16 @@ public class TabKuLayout extends LinearLayout {
         mViewpager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                if (positionOffset != 0) {
-                    if (lastValue >= positionOffsetPixels) {
-                        //右滑
-                        scrollOrientation = 0;
-                    } else if (lastValue < positionOffsetPixels) {
-                        //左滑
-                        scrollOrientation = 1;
-                    }
-                }
-                lastValue = positionOffsetPixels;
-                final int roundedPosition = Math.round(position + positionOffset);
-                mIndicatorView.updateIndicator(position, positionOffset, positionOffsetPixels, scrollOrientation);
+                mIndicatorView.updateIndicator(position, positionOffset);
             }
 
             @Override
             public void onPageSelected(int position) {
-//                Log.v("test", "onPageSelected:=" + position);
+                setSelectedTabView(position);
             }
 
             @Override
             public void onPageScrollStateChanged(int state) {
-                Log.v("test", "onPageScrollStateChanged:=" + mViewpager.getCurrentItem());
             }
         });
     }
@@ -98,11 +87,34 @@ public class TabKuLayout extends LinearLayout {
         }
     }
 
+    private void setSelectedTabView(int position) {
+        final int tabCount = mTabContainer.getChildCount();
+        if (position < tabCount) {
+            for (int i = 0; i < tabCount; i++) {
+                final View child = mTabContainer.getChildAt(i);
+                child.setSelected(i == position);
+            }
+        }
+    }
+
+
+    /**
+     * 添加文字
+     */
     private void addTabTextView() {
         for (int i = 0; i < mTabChildCount; i++) {
-            TabKuView tabKuView = new TabKuView(mContext);
+            final TabKuView tabKuView = new TabKuView(mContext);
             tabKuView.setText(mPagerAdapter.getPageTitle(i));
             LinearLayout.LayoutParams tabKuViewParams = new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT, 1.0f);
+            final int finalI = i;
+            tabKuView.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    mViewpager.setCurrentItem(finalI);
+                    tabKuView.setSelected(true);
+                }
+            });
+            tabKuView.setTextColor(mColorStateList);
             mTabContainer.addView(tabKuView, tabKuViewParams);
         }
         super.addView(mTabContainer, 0, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
@@ -121,8 +133,8 @@ public class TabKuLayout extends LinearLayout {
         setOrientation(VERTICAL);
         mTabContainer = new LinearLayout(context);
         mTabContainer.setGravity(Gravity.CENTER_VERTICAL);
+        mColorStateList = createColorStateList(Color.BLACK, Color.RED);
     }
-
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
@@ -136,14 +148,14 @@ public class TabKuLayout extends LinearLayout {
     @Override
     public void onWindowFocusChanged(boolean hasWindowFocus) {
         super.onWindowFocusChanged(hasWindowFocus);
-        Log.v("test", "onWindowFocusChanged");
         if (hasWindowFocus) {
             LinearLayout.LayoutParams params = (LayoutParams) mTabContainer.getLayoutParams();
             params.height = getHeight() - mIndicatorHeight;
             params.width = LayoutParams.MATCH_PARENT;
             mTabContainer.setLayoutParams(params);
             mIndicatorView.setItemWidth(getWidth() / mTabContainer.getChildCount());
-            mIndicatorView.updateIndicator(0, 0, 0, -1);
+            mIndicatorView.updateIndicator(0, 0);
+            setSelectedTabView(0);
         }
     }
 
@@ -161,5 +173,22 @@ public class TabKuLayout extends LinearLayout {
         public TabKuView(Context context, AttributeSet attrs, int defStyleAttr) {
             super(context, attrs, defStyleAttr);
         }
+    }
+
+    private static ColorStateList createColorStateList(int defaultColor, int selectedColor) {
+        final int[][] states = new int[2][];
+        final int[] colors = new int[2];
+        int i = 0;
+
+        states[i] = SELECTED_STATE_SET;
+        colors[i] = selectedColor;
+        i++;
+
+        // Default enabled state
+        states[i] = EMPTY_STATE_SET;
+        colors[i] = defaultColor;
+        i++;
+
+        return new ColorStateList(states, colors);
     }
 }
