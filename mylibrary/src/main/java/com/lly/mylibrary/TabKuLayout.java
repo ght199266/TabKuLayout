@@ -9,6 +9,7 @@ import android.support.v7.widget.AppCompatTextView;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.LinearLayout;
 
 /**
@@ -23,9 +24,14 @@ import android.widget.LinearLayout;
 
 public class TabKuLayout extends LinearLayout {
 
-    private Context mContext;
+    /**
+     * 默认选中选中position
+     */
+    private static final int DEFAULT_SELECT_POSTION = 0;
 
-
+    /**
+     * 指示器高度
+     */
     private int mIndicatorHeight = 10;
 
     private ViewPager mViewpager;
@@ -35,19 +41,27 @@ public class TabKuLayout extends LinearLayout {
     //Tab数量
     private int mTabChildCount;
     private PagerAdapter mPagerAdapter;
-
-
     private ColorStateList mColorStateList;
-    //指示器距离底部距离
-//    private int mIndicatorBottom = 10;
+
+    private int mItemWidth;
+
 
     public TabKuLayout(Context context) {
         this(context, null);
     }
 
+    /**
+     * 设置指示器的高度
+     *
+     * @param indicatorHeight
+     */
+    public void setIndicatorHeight(int indicatorHeight) {
+        this.mIndicatorHeight = indicatorHeight;
+//        updateTabContainerLayoutParams();
+    }
+
     public TabKuLayout(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
-        this.mContext = context;
     }
 
     public void setViewpager(ViewPager mViewpager) {
@@ -63,7 +77,7 @@ public class TabKuLayout extends LinearLayout {
         mViewpager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                mIndicatorView.updateIndicator(position, positionOffset);
+                mIndicatorView.updateIndicator(position, positionOffset, mItemWidth);
             }
 
             @Override
@@ -77,13 +91,11 @@ public class TabKuLayout extends LinearLayout {
         });
     }
 
-
     private void getPagerAdapter() {
         mPagerAdapter = mViewpager.getAdapter();
         if (mPagerAdapter != null) {
             mTabChildCount = mPagerAdapter.getCount();
             addTabTextView();
-            addIndicatorView();
         }
     }
 
@@ -97,13 +109,12 @@ public class TabKuLayout extends LinearLayout {
         }
     }
 
-
     /**
      * 添加文字
      */
     private void addTabTextView() {
         for (int i = 0; i < mTabChildCount; i++) {
-            final TabKuView tabKuView = new TabKuView(mContext);
+            final TabKuView tabKuView = new TabKuView(getContext());
             tabKuView.setText(mPagerAdapter.getPageTitle(i));
             LinearLayout.LayoutParams tabKuViewParams = new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT, 1.0f);
             final int finalI = i;
@@ -117,61 +128,71 @@ public class TabKuLayout extends LinearLayout {
             tabKuView.setTextColor(mColorStateList);
             mTabContainer.addView(tabKuView, tabKuViewParams);
         }
-        super.addView(mTabContainer, 0, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-    }
-
-    /**
-     *
-     */
-    private void addIndicatorView() {
-        mIndicatorView = new TabIndicatorView(mContext);
-        super.addView(mIndicatorView, 1, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, mIndicatorHeight));
     }
 
     public TabKuLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         setOrientation(VERTICAL);
         mTabContainer = new LinearLayout(context);
-        mTabContainer.setGravity(Gravity.CENTER_VERTICAL);
+        mIndicatorView = new TabIndicatorView(context);
         mColorStateList = createColorStateList(Color.BLACK, Color.RED);
+
+        getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                addView(mTabContainer, 0, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, getHeight() - mIndicatorHeight));
+                addView(mIndicatorView, 1, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, mIndicatorHeight));
+                getViewTreeObserver().removeOnGlobalLayoutListener(this);
+            }
+        });
+
+        mIndicatorView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                mViewpager.setCurrentItem(mViewpager.getCurrentItem());
+                setSelectedTabView(mViewpager.getCurrentItem());
+            }
+        });
     }
 
-    @Override
-    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        super.onSizeChanged(w, h, oldw, oldh);
-        LinearLayout.LayoutParams params = (LayoutParams) mTabContainer.getLayoutParams();
-        params.height = h - mIndicatorHeight;
-        params.width = LayoutParams.WRAP_CONTENT;
-        mTabContainer.setLayoutParams(params);
+
+    /**
+     * 默认选中item
+     *
+     * @param position
+     */
+    private void setDefaultSelect(int position) {
+        if (position < mTabContainer.getChildCount()) {
+            TabKuView tabKuView = (TabKuView) mTabContainer.getChildAt(position);
+            tabKuView.setSelected(true);
+        }
+        mIndicatorView.updateIndicator(position, 0, mItemWidth);
     }
 
+
     @Override
-    public void onWindowFocusChanged(boolean hasWindowFocus) {
-        super.onWindowFocusChanged(hasWindowFocus);
-        if (hasWindowFocus) {
-            LinearLayout.LayoutParams params = (LayoutParams) mTabContainer.getLayoutParams();
-            params.height = getHeight() - mIndicatorHeight;
-            params.width = LayoutParams.MATCH_PARENT;
-            mTabContainer.setLayoutParams(params);
-            mIndicatorView.setItemWidth(getWidth() / mTabContainer.getChildCount());
-            mIndicatorView.updateIndicator(0, 0);
-            setSelectedTabView(0);
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        int height = MeasureSpec.getSize(heightMeasureSpec);
+        int width = MeasureSpec.getSize(widthMeasureSpec);
+
+        if (mTabContainer.getChildCount() > 0) {
+            mItemWidth = width / mTabContainer.getChildCount();
         }
     }
 
+    private void updateTabContainerLayoutParams() {
+        LinearLayout.LayoutParams params = (LayoutParams) mTabContainer.getLayoutParams();
+        params.height = getHeight() - mIndicatorHeight;
+        params.width = LayoutParams.MATCH_PARENT;
+        mTabContainer.setLayoutParams(params);
+    }
 
     private class TabKuView extends AppCompatTextView {
         public TabKuView(Context context) {
             super(context);
             setGravity(Gravity.CENTER);
-        }
-
-        public TabKuView(Context context, AttributeSet attrs) {
-            super(context, attrs);
-        }
-
-        public TabKuView(Context context, AttributeSet attrs, int defStyleAttr) {
-            super(context, attrs, defStyleAttr);
         }
     }
 

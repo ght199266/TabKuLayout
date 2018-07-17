@@ -67,7 +67,11 @@ public class MainActivity extends AppCompatActivity {
                 return "item" + position;
             }
         });
+        tk_layout.setIndicatorHeight(20);
         tk_layout.setViewpager(vp_viewpager);
+        vp_viewpager.setCurrentItem(2);
+
+
     }
 
 }
