@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         vp_viewpager = findViewById(R.id.vp_viewpager);
         tk_layout = findViewById(R.id.tk_layout);
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 10; i++) {
             LinearLayout linearLayout = new LinearLayout(this, null, ViewPager.LayoutParams.MATCH_PARENT, ViewPager.LayoutParams.MATCH_PARENT);
             TextView textView = new TextView(this);
             textView.setText("Item" + i);
@@ -70,8 +70,6 @@ public class MainActivity extends AppCompatActivity {
         tk_layout.setIndicatorHeight(20);
         tk_layout.setViewpager(vp_viewpager);
         vp_viewpager.setCurrentItem(2);
-
-
     }
 
 }

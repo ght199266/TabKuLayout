@@ -10,6 +10,7 @@ import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 
 /**
@@ -22,21 +23,45 @@ import android.widget.LinearLayout;
  * @description
  */
 
-public class TabKuLayout extends LinearLayout {
+public class TabKuLayout extends HorizontalScrollView {
 
     /**
      * 默认选中选中position
      */
     private static final int DEFAULT_SELECT_POSTION = 0;
 
+
+    private static final int MODE_SCROLLABLE = 0;
+
+    private static final int MODE_FIXED = 1;
+
+    /**
+     * 排序方式
+     */
+    private int mMode = MODE_SCROLLABLE;
+
+    /**
+     * tabView居左间距
+     */
+    private int mTabLeftPadding = 30;
+
+    /**
+     * tabView居右间距
+     */
+    private int mTabRightPadding = 30;
+
     /**
      * 指示器高度
      */
+
     private int mIndicatorHeight = 10;
 
     private ViewPager mViewpager;
     private LinearLayout mTabContainer;
     private TabIndicatorView mIndicatorView;
+
+
+    private LinearLayout mViewGroup;
 
     //Tab数量
     private int mTabChildCount;
@@ -77,7 +102,7 @@ public class TabKuLayout extends LinearLayout {
         mViewpager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                mIndicatorView.updateIndicator(position, positionOffset, mItemWidth);
+                mIndicatorView.updateIndicator(position, positionOffset, 200);
             }
 
             @Override
@@ -116,7 +141,8 @@ public class TabKuLayout extends LinearLayout {
         for (int i = 0; i < mTabChildCount; i++) {
             final TabKuView tabKuView = new TabKuView(getContext());
             tabKuView.setText(mPagerAdapter.getPageTitle(i));
-            LinearLayout.LayoutParams tabKuViewParams = new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT, 1.0f);
+//            LinearLayout.LayoutParams tabKuViewParams = new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT, 1.0f);
+            LinearLayout.LayoutParams tabKuViewParams = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
             final int finalI = i;
             tabKuView.setOnClickListener(new OnClickListener() {
                 @Override
@@ -126,23 +152,30 @@ public class TabKuLayout extends LinearLayout {
                 }
             });
             tabKuView.setTextColor(mColorStateList);
+            tabKuView.setPadding(mTabLeftPadding, 0, mTabRightPadding, 0);
             mTabContainer.addView(tabKuView, tabKuViewParams);
         }
     }
 
     public TabKuLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        setOrientation(VERTICAL);
+//        setOrientation(VERTICAL);
+        mViewGroup = new LinearLayout(context);
+//        mViewGroup.setBackgroundColor(Color.RED);
+        mViewGroup.setOrientation(LinearLayout.VERTICAL);
+
         mTabContainer = new LinearLayout(context);
         mIndicatorView = new TabIndicatorView(context);
+
         mColorStateList = createColorStateList(Color.BLACK, Color.RED);
 
         getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-                addView(mTabContainer, 0, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, getHeight() - mIndicatorHeight));
-                addView(mIndicatorView, 1, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, mIndicatorHeight));
+                mViewGroup.addView(mTabContainer, 0, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, getHeight() - mIndicatorHeight));
+                mViewGroup.addView(mIndicatorView, 1, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, mIndicatorHeight));
                 getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                addView(mViewGroup, new HorizontalScrollView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
             }
         });
 
@@ -183,7 +216,7 @@ public class TabKuLayout extends LinearLayout {
     }
 
     private void updateTabContainerLayoutParams() {
-        LinearLayout.LayoutParams params = (LayoutParams) mTabContainer.getLayoutParams();
+        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mTabContainer.getLayoutParams();
         params.height = getHeight() - mIndicatorHeight;
         params.width = LayoutParams.MATCH_PARENT;
         mTabContainer.setLayoutParams(params);
