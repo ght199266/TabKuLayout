@@ -14,6 +14,7 @@ import com.lly.mylibrary.TabKuLayout;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -30,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < 10; i++) {
             LinearLayout linearLayout = new LinearLayout(this, null, ViewPager.LayoutParams.MATCH_PARENT, ViewPager.LayoutParams.MATCH_PARENT);
             TextView textView = new TextView(this);
-            textView.setText("Item" + i);
+            textView.setText("我是Item" + i);
             textView.setTextSize(12);
             textView.setGravity(Gravity.CENTER);
             linearLayout.addView(textView);
@@ -64,12 +65,24 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public CharSequence getPageTitle(int position) {
-                return "item" + position;
+                int random = new Random().nextInt(100000000);
+                if (position == 0) {
+                    return "我";
+                } else if (position == 1) {
+                    return "我是啦";
+                } else if (position == 2) {
+                    return "我是啦啦啦";
+                } else if (position == 3) {
+                    return "我是啦啦啦啦啦";
+                } else if (position == 4) {
+                    return "我是啦啦啦啦啦啦啦啦啦啦啦";
+                } else {
+                    return "我是item" + random;
+                }
             }
         });
         tk_layout.setIndicatorHeight(20);
         tk_layout.setViewpager(vp_viewpager);
-        vp_viewpager.setCurrentItem(2);
     }
 
 }

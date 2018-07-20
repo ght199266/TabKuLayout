@@ -4,14 +4,18 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.AppCompatTextView;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
+
+import java.util.ArrayList;
 
 /**
  * TabKuLayout[v 1.0.0]
@@ -71,6 +75,8 @@ public class TabKuLayout extends HorizontalScrollView {
     private int mItemWidth;
 
 
+    private ArrayList<Integer> itemWidth = new ArrayList<>();
+
     public TabKuLayout(Context context) {
         this(context, null);
     }
@@ -95,6 +101,9 @@ public class TabKuLayout extends HorizontalScrollView {
         getPagerAdapter();
     }
 
+
+    private float curPostionOffset;
+
     /**
      * 监听viewpager滑动
      */
@@ -102,11 +111,16 @@ public class TabKuLayout extends HorizontalScrollView {
         mViewpager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                mIndicatorView.updateIndicator(position, positionOffset, 200);
+//                Log.v("test", "positionOffset:=" + positionOffset);
+
+                mIndicatorView.updateNewIndicator(position, positionOffset);
+                curPostionOffset = positionOffset;
+                scrollTo(calculateScrollXForTab(position, positionOffset), 0);
             }
 
             @Override
             public void onPageSelected(int position) {
+                Log.v("test", "onPageSelected：=" + position);
                 setSelectedTabView(position);
             }
 
@@ -115,6 +129,29 @@ public class TabKuLayout extends HorizontalScrollView {
             }
         });
     }
+
+
+    private int calculateScrollXForTab(int position, float positionOffset) {
+        if (mMode == MODE_SCROLLABLE) {
+            final View selectedChild = mTabContainer.getChildAt(position);
+            final View nextChild = position + 1 < mTabContainer.getChildCount()
+                    ? mTabContainer.getChildAt(position + 1)
+                    : null;
+            final int selectedWidth = selectedChild != null ? selectedChild.getWidth() : 0;
+            final int nextWidth = nextChild != null ? nextChild.getWidth() : 0;
+
+            // base scroll amount: places center of tab in center of parent
+            int scrollBase = selectedChild.getLeft() + (selectedWidth / 2) - (getWidth() / 2);
+            // offset amount: fraction of the distance between centers of tabs
+            int scrollOffset = (int) ((selectedWidth + nextWidth) * 0.5f * positionOffset);
+
+            return (ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_LTR)
+                    ? scrollBase + scrollOffset
+                    : scrollBase - scrollOffset;
+        }
+        return 0;
+    }
+
 
     private void getPagerAdapter() {
         mPagerAdapter = mViewpager.getAdapter();
@@ -176,15 +213,23 @@ public class TabKuLayout extends HorizontalScrollView {
                 mViewGroup.addView(mIndicatorView, 1, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, mIndicatorHeight));
                 getViewTreeObserver().removeOnGlobalLayoutListener(this);
                 addView(mViewGroup, new HorizontalScrollView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+//                setDefaultSelect(0);
             }
         });
 
-        mIndicatorView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+        mTabContainer.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
                 getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                Log.v("test", "onGlobalLayout");
                 mViewpager.setCurrentItem(mViewpager.getCurrentItem());
                 setSelectedTabView(mViewpager.getCurrentItem());
+                for (int i = 0; i < mTabContainer.getChildCount(); i++) {
+                    int width = mTabContainer.getChildAt(i).getWidth();
+                    itemWidth.add(width);
+                }
+                mIndicatorView.setItemWidth(itemWidth);
+                mIndicatorView.updateIndicator(mViewpager.getCurrentItem(), 0, mTabContainer.getChildAt(mViewpager.getCurrentItem()).getWidth());
             }
         });
     }

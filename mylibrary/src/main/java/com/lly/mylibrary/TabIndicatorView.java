@@ -5,7 +5,10 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
+import android.util.Log;
 import android.view.View;
+
+import java.util.ArrayList;
 
 public class TabIndicatorView extends View {
 
@@ -37,12 +40,26 @@ public class TabIndicatorView extends View {
      */
     private int endY;
 
+
+    private ArrayList<Integer> mItemWidth;
+
     private LinearGradient mLinearGradient;
+
+
+    private float mPositionOffset;
+
+
+    private float mOffset;
 
     public TabIndicatorView(Context context) {
         super(context);
         mIndicatorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         colors = new int[]{Color.YELLOW, Color.RED};
+    }
+
+
+    public void setItemWidth(ArrayList<Integer> mItemWidth) {
+        this.mItemWidth = mItemWidth;
     }
 
     public void setColors(int[] colors) {
@@ -72,6 +89,7 @@ public class TabIndicatorView extends View {
      * @param itemWidth      item宽度
      */
     public void updateIndicator(int position, float positionOffset, int itemWidth) {
+//        Log.v("test", "itemWidth:=" + itemWidth);
         final int roundedPosition = Math.round(position + positionOffset);
         final int doubleItemWidth = itemWidth * 2;
         left = position * itemWidth;
@@ -84,6 +102,65 @@ public class TabIndicatorView extends View {
             updateGradientValue();
         }
         invalidate();
+    }
+
+    /**
+     * 更新指示器位置
+     *
+     * @param position       位置
+     * @param positionOffset 当前偏移量
+     */
+    public void updateNewIndicator(int position, float positionOffset) {
+        if (mItemWidth == null) {
+            return;
+        }
+//        if (positionOffset == 0) {
+//            return;
+//        }
+        final int roundedPosition = Math.round(position + positionOffset);
+
+        boolean isNext = positionOffset > mPositionOffset;
+        mPositionOffset = positionOffset;
+
+
+        int curWidth = mItemWidth.get(position);
+        int nextWidth = 0;
+        if (position + 1 < mItemWidth.size()) {
+            nextWidth = mItemWidth.get(position + 1);
+        } else {
+            nextWidth = mItemWidth.get(mItemWidth.size() - 1);
+        }
+
+        final int doubleItemWidth = curWidth + nextWidth;
+
+        left = getPositionLeft(position);
+        endY = (int) (left + curWidth + ((doubleItemWidth * 2) * positionOffset));
+
+        if (endY - left >= doubleItemWidth) {
+            left = (int) (left + (curWidth * ((1 / (1 - mOffset)) * (positionOffset - mOffset))));
+            endY = getPositionLeft(position + 2);
+        } else {
+            mOffset = positionOffset;
+        }
+
+        Log.v("test", "left:=" + left);
+        Log.v("test", "endY:=" + endY);
+
+        if (isGradient) {
+            updateGradientValue();
+        }
+        invalidate();
+    }
+
+
+    private int getPositionLeft(int position) {
+        int width = 0;
+        if (position <= mItemWidth.size()) {
+            for (int i = 0; i < position; i++) {
+                width += mItemWidth.get(i);
+            }
+        }
+        return width;
     }
 
     /**
