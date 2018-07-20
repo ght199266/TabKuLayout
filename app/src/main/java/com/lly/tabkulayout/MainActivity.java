@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         vp_viewpager = findViewById(R.id.vp_viewpager);
         tk_layout = findViewById(R.id.tk_layout);
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 100; i++) {
             LinearLayout linearLayout = new LinearLayout(this, null, ViewPager.LayoutParams.MATCH_PARENT, ViewPager.LayoutParams.MATCH_PARENT);
             TextView textView = new TextView(this);
             textView.setText("我是Item" + i);
@@ -65,20 +65,20 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public CharSequence getPageTitle(int position) {
-                int random = new Random().nextInt(100000000);
-                if (position == 0) {
-                    return "我";
-                } else if (position == 1) {
-                    return "我是啦";
-                } else if (position == 2) {
-                    return "我是啦啦啦";
-                } else if (position == 3) {
-                    return "我是啦啦啦啦啦";
-                } else if (position == 4) {
-                    return "我是啦啦啦啦啦啦啦啦啦啦啦";
-                } else {
-                    return "我是item" + random;
-                }
+                int random = new Random().nextInt(10);
+//                if (position == 0) {
+//                    return "我";
+//                } else if (position == 1) {
+//                    return "我是啦";
+//                } else if (position == 2) {
+//                    return "我是啦啦啦";
+//                } else if (position == 3) {
+//                    return "我是啦啦啦啦啦";
+//                } else if (position == 4) {
+//                    return "我是啦啦啦啦啦啦啦啦啦啦啦";
+//                } else {
+                return "" + position;
+//                }
             }
         });
         tk_layout.setIndicatorHeight(20);
