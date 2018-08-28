@@ -5,10 +5,9 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
-import android.util.Log;
 import android.view.View;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class TabIndicatorView extends View {
 
@@ -41,7 +40,7 @@ public class TabIndicatorView extends View {
     private int endY;
 
 
-    private ArrayList<Integer> mItemWidth;
+    private List<Integer> mItemWidth;
 
     private LinearGradient mLinearGradient;
 
@@ -57,8 +56,7 @@ public class TabIndicatorView extends View {
         colors = new int[]{Color.YELLOW, Color.RED};
     }
 
-
-    public void setItemWidth(ArrayList<Integer> mItemWidth) {
+    public void setItemWidth(List<Integer> mItemWidth) {
         this.mItemWidth = mItemWidth;
     }
 
@@ -142,9 +140,6 @@ public class TabIndicatorView extends View {
         } else {
             mOffset = positionOffset;
         }
-
-        Log.v("test", "left:=" + left);
-        Log.v("test", "endY:=" + endY);
 
         if (isGradient) {
             updateGradientValue();
