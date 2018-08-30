@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="TabKuLayout_styleable">
+        <!-- 字体大小 -->
+        <attr name="tab_font_size" format="dimension" />
+        <!-- 字体颜色 -->
+        <attr name="tabSelectedTextColor" format="color" />
+        <!-- 指示器高度 -->
+        <attr name="tabIndicatorHeight" format="dimension" />
+        <!--指示器起始颜色 -->
+        <attr name="tabIndicator_start_color" format="color" />
+        <!--指示器结束颜色 -->
+        <attr name="tabIndicator_end_color" format="color" />
+        <!-- 显示模式 -->
+        <attr name="tab_Mode" format="integer">
+            <flag name="scrollable" value="0" />
+            <flag name="fixed" value="1" />
+        </attr>
+    </declare-styleable>
+
+</resources>

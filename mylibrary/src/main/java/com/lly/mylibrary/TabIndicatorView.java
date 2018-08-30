@@ -2,7 +2,6 @@ package com.lly.mylibrary;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.view.View;
@@ -39,29 +38,31 @@ public class TabIndicatorView extends View {
      */
     private int endY;
 
-
     private List<Integer> mItemWidth;
-
     private LinearGradient mLinearGradient;
 
-
     private float mPositionOffset;
-
 
     private float mOffset;
 
     public TabIndicatorView(Context context) {
         super(context);
         mIndicatorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        colors = new int[]{Color.YELLOW, Color.RED};
+        colors = new int[2];
+    }
+
+    public void setGradient(boolean gradient) {
+        isGradient = gradient;
     }
 
     public void setItemWidth(List<Integer> mItemWidth) {
         this.mItemWidth = mItemWidth;
     }
 
-    public void setColors(int[] colors) {
-        this.colors = colors;
+
+    public void setColors(int startColor, int endColor) {
+        this.colors[0] = startColor;
+        this.colors[1] = endColor;
     }
 
     @Override
@@ -78,29 +79,6 @@ public class TabIndicatorView extends View {
         canvas.drawRoundRect(left, 0, endY, getHeight(), mRoundRadius, mRoundRadius, mIndicatorPaint);
     }
 
-
-    /**
-     * 更新指示器位置
-     *
-     * @param position       位置
-     * @param positionOffset 当前偏移量
-     * @param itemWidth      item宽度
-     */
-    public void updateIndicator(int position, float positionOffset, int itemWidth) {
-//        Log.v("test", "itemWidth:=" + itemWidth);
-        final int roundedPosition = Math.round(position + positionOffset);
-        final int doubleItemWidth = itemWidth * 2;
-        left = position * itemWidth;
-        endY = (int) (left + itemWidth + (doubleItemWidth * positionOffset));
-        if (endY - left >= doubleItemWidth) {
-            left += doubleItemWidth * (positionOffset - 0.5f);
-            endY = (roundedPosition + 1) * itemWidth;
-        }
-        if (isGradient) {
-            updateGradientValue();
-        }
-        invalidate();
-    }
 
     /**
      * 更新指示器位置
@@ -143,6 +121,8 @@ public class TabIndicatorView extends View {
 
         if (isGradient) {
             updateGradientValue();
+        } else {
+            mIndicatorPaint.setColor(colors[0]);
         }
         invalidate();
     }

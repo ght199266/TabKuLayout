@@ -2,12 +2,14 @@ package com.lly.mylibrary;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.AppCompatTextView;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -41,7 +43,7 @@ public class TabKuLayout extends HorizontalScrollView {
     /**
      * 排序方式
      */
-    private int mMode = MODE_SCROLLABLE;
+    private int mMode;
 
     /**
      * tabView居左间距
@@ -57,19 +59,45 @@ public class TabKuLayout extends HorizontalScrollView {
      * 指示器高度
      */
 
-    private int mIndicatorHeight = 10;
+    private float mIndicatorHeight = 10;
+
+    /**
+     * 文字大小
+     */
+    private float tab_font_size = 15;
+
+    /**
+     * 文字颜色
+     */
+    private ColorStateList mColorStateList;
+
+
+    /**
+     * 指示器是否渐变
+     */
+    private boolean isGradient;
+
+    /**
+     * 指示器起始颜色
+     */
+    private int mTabIndicator_start_color;
+
+    /**
+     * 指示器结束颜色
+     */
+    private int mTabIndicator_end_color;
+
 
     private ViewPager mViewpager;
     private LinearLayout mTabContainer;
     private TabIndicatorView mIndicatorView;
-
 
     private LinearLayout mViewGroup;
 
     //Tab数量
     private int mTabChildCount;
     private PagerAdapter mPagerAdapter;
-    private ColorStateList mColorStateList;
+
 
     private List<Integer> itemsWidth = new ArrayList<>();
 
@@ -90,7 +118,7 @@ public class TabKuLayout extends HorizontalScrollView {
         this(context, attrs, 0);
     }
 
-    public void setViewpager(ViewPager mViewpager) {
+    public void setupWithViewPager(ViewPager mViewpager) {
         this.mViewpager = mViewpager;
         addOnPageChangeListener();
         getPagerAdapter();
@@ -127,27 +155,6 @@ public class TabKuLayout extends HorizontalScrollView {
         scrollTo(calculateScrollXForTab(position, positionOffset), 0);
     }
 
-    private int calculateScrollXForTab(int position, float positionOffset) {
-        if (mMode == MODE_SCROLLABLE) {
-            final View selectedChild = mTabContainer.getChildAt(position);
-            final View nextChild = position + 1 < mTabContainer.getChildCount()
-                    ? mTabContainer.getChildAt(position + 1)
-                    : null;
-            final int selectedWidth = selectedChild != null ? selectedChild.getWidth() : 0;
-            final int nextWidth = nextChild != null ? nextChild.getWidth() : 0;
-
-            // base scroll amount: places center of tab in center of parent
-            int scrollBase = selectedChild.getLeft() + (selectedWidth / 2) - (getWidth() / 2);
-            // offset amount: fraction of the distance between centers of tabs
-            int scrollOffset = (int) ((selectedWidth + nextWidth) * 0.5f * positionOffset);
-
-            return (ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_LTR)
-                    ? scrollBase + scrollOffset
-                    : scrollBase - scrollOffset;
-        }
-        return 0;
-    }
-
 
     private void getPagerAdapter() {
         mPagerAdapter = mViewpager.getAdapter();
@@ -175,6 +182,8 @@ public class TabKuLayout extends HorizontalScrollView {
         for (int i = 0; i < mTabChildCount; i++) {
             final TabKuView tabKuView = new TabKuView(getContext());
             tabKuView.setText(mPagerAdapter.getPageTitle(i));
+            tabKuView.setMaxLines(1);
+            tabKuView.setTextSize(tab_font_size);
 //            LinearLayout.LayoutParams tabKuViewParams = new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT, 1.0f);
             LinearLayout.LayoutParams tabKuViewParams = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
             final int finalI = i;
@@ -187,36 +196,59 @@ public class TabKuLayout extends HorizontalScrollView {
             });
             tabKuView.setTextColor(mColorStateList);
             tabKuView.setPadding(mTabLeftPadding, 0, mTabRightPadding, 0);
-//            mTabContainer.setBackgroundColor(Color.RED);
             mTabContainer.addView(tabKuView, tabKuViewParams);
         }
     }
 
     private void updateTabContainerLayoutParams() {
         LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mTabContainer.getLayoutParams();
-        params.height = getHeight() - mIndicatorHeight;
+        params.height = (int) (getHeight() - mIndicatorHeight);
         params.width = LayoutParams.MATCH_PARENT;
         mTabContainer.setLayoutParams(params);
     }
 
     public TabKuLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-//        setOrientation(VERTICAL);
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.TabKuLayout_styleable);
+
+        tab_font_size = px2sp(context, typedArray.getDimension(R.styleable.TabKuLayout_styleable_tab_font_size, 12));
+
+        mIndicatorHeight = typedArray.getDimensionPixelSize(R.styleable.TabKuLayout_styleable_tabIndicatorHeight, 2);
+
+        int tabSelectedTextColor = typedArray.getColor(R.styleable.TabKuLayout_styleable_tabSelectedTextColor, 0);
+        mColorStateList = createColorStateList(Color.GRAY, tabSelectedTextColor);
+
+
+        mTabIndicator_start_color = typedArray.getColor(R.styleable.TabKuLayout_styleable_tabIndicator_start_color, Color.RED);
+
+        if (typedArray.hasValue(R.styleable.TabKuLayout_styleable_tabIndicator_end_color)) {
+            isGradient = true;
+            mTabIndicator_end_color = typedArray.getColor(R.styleable.TabKuLayout_styleable_tabIndicator_end_color, 0);
+        }
+
+        mMode = typedArray.getInt(R.styleable.TabKuLayout_styleable_tab_Mode, MODE_FIXED);
+
+        Log.v("test", "mMode:=" + mMode);
+
+        typedArray.recycle();
+
         mViewGroup = new LinearLayout(context);
         mViewGroup.setOrientation(LinearLayout.VERTICAL);
 
         mTabContainer = new LinearLayout(context);
         mIndicatorView = new TabIndicatorView(context);
+        mIndicatorView.setGradient(isGradient);
+        mIndicatorView.setColors(mTabIndicator_start_color, mTabIndicator_end_color);
 
-        mColorStateList = createColorStateList(Color.BLACK, Color.RED);
 
         getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-                mViewGroup.addView(mTabContainer, 0, new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, getHeight() - mIndicatorHeight));
-                mViewGroup.addView(mIndicatorView, 1, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, mIndicatorHeight));
+                int width = mMode == MODE_SCROLLABLE ? LayoutParams.WRAP_CONTENT : getWidth();
+                mViewGroup.addView(mTabContainer, 0, new LinearLayout.LayoutParams(width, (int) (getHeight() - mIndicatorHeight)));
+                mViewGroup.addView(mIndicatorView, 1, new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, (int) mIndicatorHeight));
                 getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                addView(mViewGroup, new HorizontalScrollView.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+                addView(mViewGroup, new HorizontalScrollView.LayoutParams(1080, LayoutParams.MATCH_PARENT));
             }
         });
 
@@ -286,5 +318,38 @@ public class TabKuLayout extends HorizontalScrollView {
         i++;
 
         return new ColorStateList(states, colors);
+    }
+
+    private int calculateScrollXForTab(int position, float positionOffset) {
+        if (mMode == MODE_SCROLLABLE) {
+            final View selectedChild = mTabContainer.getChildAt(position);
+            final View nextChild = position + 1 < mTabContainer.getChildCount()
+                    ? mTabContainer.getChildAt(position + 1)
+                    : null;
+            final int selectedWidth = selectedChild != null ? selectedChild.getWidth() : 0;
+            final int nextWidth = nextChild != null ? nextChild.getWidth() : 0;
+
+            // base scroll amount: places center of tab in center of parent
+            int scrollBase = selectedChild.getLeft() + (selectedWidth / 2) - (getWidth() / 2);
+            // offset amount: fraction of the distance between centers of tabs
+            int scrollOffset = (int) ((selectedWidth + nextWidth) * 0.5f * positionOffset);
+
+            return (ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_LTR)
+                    ? scrollBase + scrollOffset
+                    : scrollBase - scrollOffset;
+        }
+        return 0;
+    }
+
+    /**
+     * 将px值转换为sp值，保证文字大小不变
+     *
+     * @param pxValue
+     * @return
+     */
+
+    public int px2sp(Context context, float pxValue) {
+        final float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
+        return (int) (pxValue / fontScale + 0.5f);
     }
 }
