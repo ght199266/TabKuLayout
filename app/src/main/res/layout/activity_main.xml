@@ -13,9 +13,9 @@
         android:layout_width="match_parent"
         android:layout_height="40dp"
         app:tabIndicatorHeight="4dp"
-        app:tabIndicator_end_color="#CD3333"
-        app:tabIndicator_start_color="#EEC900"
-        app:tabSelectedTextColor="#EE0000"
+        app:tabIndicator_end_color="#0000FF"
+        app:tabIndicator_start_color="#9ACD32"
+        app:tabSelectedTextColor="#9B30FF"
         app:tab_Mode="scrollable"
         app:tab_font_size="14sp" />
 

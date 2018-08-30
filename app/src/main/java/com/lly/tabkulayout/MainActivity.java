@@ -22,6 +22,7 @@ public class MainActivity extends AppCompatActivity {
     ViewPager vp_viewpager;
     List<View> views = new ArrayList<>();
     TabKuLayout tabKu_layout;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void addView() {
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 8; i++) {
             LinearLayout linearLayout = new LinearLayout(this);
             TextView textView = new TextView(this);
             textView.setText("我是Item" + i);
@@ -79,15 +80,15 @@ public class MainActivity extends AppCompatActivity {
         public CharSequence getPageTitle(int position) {
             int random = new Random().nextInt(10);
             if (position == 0) {
-                return "我";
+                return "颜色";
             } else if (position == 1) {
-                return "我是啦";
+                return "颜色渐变1";
             } else if (position == 2) {
-                return "我是啦啦啦啦啦";
+                return "颜色渐变2";
             } else if (position == 3) {
-                return "我是啦啦";
+                return "颜色渐变3";
             } else if (position == 4) {
-                return "我是啦";
+                return "颜色渐变4";
             } else {
                 return "item" + position;
             }

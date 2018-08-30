@@ -184,8 +184,9 @@ public class TabKuLayout extends HorizontalScrollView {
             tabKuView.setText(mPagerAdapter.getPageTitle(i));
             tabKuView.setMaxLines(1);
             tabKuView.setTextSize(tab_font_size);
-//            LinearLayout.LayoutParams tabKuViewParams = new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT, 1.0f);
-            LinearLayout.LayoutParams tabKuViewParams = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
+            LinearLayout.LayoutParams tabKuViewParams =
+                    mMode == MODE_FIXED ? new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT, 1.0f) :
+                            new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
             final int finalI = i;
             tabKuView.setOnClickListener(new OnClickListener() {
                 @Override
