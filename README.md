@@ -1,5 +1,9 @@
 # 酷炫的Tablayout(类似于新浪微博导航栏)
-![效果图](https://github.com/ght199266/TabKuLayout/blob/master/app/src/main/image/tt.gif)
+![效果图](https://github.com/ght199266/TabKuLayout/blob/master/app/src/main/image/test1.gif)
+
+![效果图](https://github.com/ght199266/TabKuLayout/blob/master/app/src/main/image/test2.gif)
+
+![效果图](https://github.com/ght199266/TabKuLayout/blob/master/app/src/main/image/test3.gif)
 
 ### 使用
 ```java
